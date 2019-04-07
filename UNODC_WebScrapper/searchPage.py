@@ -76,8 +76,6 @@ class SearchPage:
                 df = pageData
             else:
                 df = pd.concat([df, pageData])
-            # if i > 2:
-            #     break
 
         df.reset_index(inplace=True)
         df.drop("index", axis=1, inplace=True)

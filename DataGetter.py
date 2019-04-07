@@ -5,4 +5,4 @@ if __name__ == "__main__":
     # urls = searcher.get_page_urls()
     urls = searcher.load_urls("./data/case_urls.csv")
     data = searcher.collect_data(urls)
-    print(data)
+    data.to_csv("./unodc_export.csv", index=False)
