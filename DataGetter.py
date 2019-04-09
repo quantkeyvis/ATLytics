@@ -6,3 +6,4 @@ if __name__ == "__main__":
     urls = searcher.load_urls("./data/case_urls.csv")
     data = searcher.collect_data(urls)
     data.to_csv("./unodc_export.csv", index=False)
+    data.to_pickle("./unodc_export.pkl")
