@@ -76,7 +76,7 @@ class CasePage:
             keyword_dict[label] = []
             tags = keyword.find_all("div", {"class": "tags"})
             for tag in tags:
-                keyword_dict[label].append(str(tag.text))
+                keyword_dict[label].append(tag.text.strip())
         return keyword_dict if keywords else None
 
     def get_procedural_info(self):
@@ -92,14 +92,14 @@ class CasePage:
             value = keyword.find("div", {"class": "value"})
             if label:
                 label = label.text.replace(":", "")
-                procedural_dict[label] = value.text
-            elif "class" in keyword and "proceduralHistoryDescription" in keyword["class"]:
+                procedural_dict[label] = value.text.strip()
+            elif keyword.get("class") and "proceduralHistoryDescription" in keyword.get("class"):
                 procedure_text = " ".join([x.text for x in keyword.find_all("p")])
         return (procedural_dict, procedure_text) if keywords else (None, "")
 
     def get_people(self, className):
         victim_list = []
-        victims = self.html.find("div", {"class":className})
+        victims = self.html.find("div", {"class": className})
         if not victims:
             return None
         for victim in victims.find_all("div", {"class":"person"}):
@@ -107,10 +107,10 @@ class CasePage:
             for keyword in victim.find_all("div"):
                 label = keyword.find("div", {"class": "label"})
                 value = keyword.find("div", {"class": "value"})
+                paragraphs = " ".join([x.text for x in keyword.find_all("p")])
                 if label and value:
                     label = label.text.replace(":", "").replace("\n", "")
-                    paragraphs = " ".join([x.text for x in keyword.find_all("p")])
-                    victim_dict[label] = value.text + paragraphs
+                    victim_dict[label.strip()] = value.text.strip() + paragraphs.strip()
 
 
             victim_list.append(victim_dict)
