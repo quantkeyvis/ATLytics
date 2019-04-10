@@ -17,7 +17,7 @@ class CasePage:
         self.html = bs(text, 'html.parser')
 
     def get_all_data(self):
-        COLUMNS = ["Title", "UNODC_NO", "Summary", "Keywords", "Procedural_Fields", "Procedural_Text", "Victims", "Defendants",
+        COLUMNS = ["UNODC_NO", "Title", "YEAR", "Country", "Summary", "Keywords", "Procedural_Fields", "Procedural_Text", "Victims", "Defendants",
                    "Charges"]
 
         title = self.get_title()
@@ -31,9 +31,17 @@ class CasePage:
         if title == "404 Error":
             self.set_url(self.url.replace("drugCrimetype","migrantsmugglingcrimetype"))
         title = self.get_title()
-
+        if title == "404 Error":
+            self.set_url(self.url.replace("migrantsmugglingcrimetype","moneylaunderingcrimetype"))
+        title = self.get_title()
+        if title == "404 Error":
+            self.set_url(self.url.replace("moneylaunderingcrimetype","cybercrimecrimetype"))
+        title = self.get_title()
         print(self.url)
 
+
+        year = self.url.split("/")[-2]
+        country = self.get_country()
         unodc_no = self.get_unodc_no()
         summary = self.get_summary()
         keyword_dict = self.get_keywords()
@@ -42,11 +50,10 @@ class CasePage:
         defendants = self.get_defendants()
         charges = self.get_charges()
 
-        dataframe = pd.DataFrame([[title, unodc_no, summary, keyword_dict, procedural_dict, procedural_text, victims,
+        dataframe = pd.DataFrame([[unodc_no, title, year, country, summary, keyword_dict, procedural_dict, procedural_text, victims,
                                    defendants, charges]], columns=COLUMNS)
 
-
-        return dataframe
+        return dataframe, self.url
 
 
     def get_title(self):
@@ -56,6 +63,10 @@ class CasePage:
     def get_unodc_no(self):
         decisionDate = self.html.find("div", {"class", "decisionVerdictDate field line"})
         return decisionDate.find("div",{"class":"value"}).text if decisionDate else None
+
+    def get_country(self):
+        country_flag = self.html.find("div", {"class":"country icon flip pull-left vcenter"})
+        return country_flag.find("span", {"class": "text"}).text if country_flag else None
 
     def get_summary(self):
         summary = self.html.find("div", {"class": "factSummary"})

@@ -8,7 +8,7 @@ from . import casePage
 
 class SearchPage:
 
-    def __init__(self, search_url="https://sherloc.unodc.org/cld/v3/htms/cldb/search.html?lng=en#?c=%7B%22filters%22:%5B%7B%22fieldName%22:%22en%23caseLaw@country_label_s%22,%22value%22:%22United%20States%20of%20America%22%7D%5D%7D"):
+    def __init__(self, search_url="https://sherloc.unodc.org/cld/v3/htms/cldb/search.html?lng=en#?c=%7B%22filters%22:%5B%5D,%22sortings%22:%22%22%7D"):
         self.search_url = search_url
 
     def get_html(self):
@@ -16,7 +16,7 @@ class SearchPage:
         driver.implicitly_wait(30)
         driver.get(self.search_url)
 
-        SCROLL_PAUSE_TIME = 10
+        SCROLL_PAUSE_TIME = 5
 
         # Get scroll height
         last_height = driver.execute_script("return document.body.scrollHeight")
@@ -40,17 +40,21 @@ class SearchPage:
         soup = self.get_html()
         dates = soup.find_all('div', {"class": "pull-right flip date-value ng-binding"})
         titles = soup.find_all("strong", {"class": "ng-binding"})
-        title_array = [strong.text.replace(" ", "_") for strong in titles]
+        title_array = [strong.text.replace(" ", "_").replace("/","") for strong in titles]
 
         year_array = [div.text.replace('\n', "").replace(',', '').replace(' ', '').split("-")[0]
                       for i, div in enumerate(dates)
                       if i % 2 == 0]
 
-        BASE_URL = "https://sherloc.unodc.org/cld/case-law-doc/traffickingpersonscrimetype/usa"
+        flags = soup.find_all("img")[2:]
+        flag_array = [x.get("src").split(".png")[0].split("/")[-1] for x in flags]
+
+        BASE_URL = "https://sherloc.unodc.org/cld/case-law-doc/traffickingpersonscrimetype"
         target_urls = []
-        for title, year in zip(title_array, year_array):
-            target_urls.append("{base}/{year}//{title}.html?lng=en&tmpl=htms".format(
-                base=BASE_URL, year=year, title=title).replace("///", "/"))
+        for title, year, flag in zip(title_array, year_array, flag_array):
+            target_urls.append( ("{base}/{flag}/{year}/{title}.html?lng=en&tmpl=htms".format(
+                flag=flag, base=BASE_URL, year=year, title=title).replace("///", "/"),
+                                 year))
 
         return target_urls
 
@@ -66,11 +70,13 @@ class SearchPage:
     def collect_data(self, urls):
 
         df = None
+        new_urls =[]
 
         for i, url in enumerate(urls):
 
             page = casePage.CasePage(url)
-            pageData = page.get_all_data()
+            pageData, new_url = page.get_all_data()
+            new_urls.append(new_url)
             print(pageData)
             if df is None:
                 df = pageData
@@ -79,7 +85,7 @@ class SearchPage:
 
         df.reset_index(inplace=True)
         df.drop("index", axis=1, inplace=True)
-        return df
+        return df, new_urls
 
 
 
